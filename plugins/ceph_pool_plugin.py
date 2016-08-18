@@ -74,8 +74,16 @@ class CephPoolPlugin(base.Base):
             pool_key = "pool-%s" % pool['pool_name']
             data[ceph_cluster][pool_key] = {}
             pool_data = data[ceph_cluster][pool_key] 
-            for stat in ('read_bytes_sec', 'write_bytes_sec', 'op_per_sec'):
+            for stat in ('read_bytes_sec', 'write_bytes_sec'):
                 pool_data[stat] = pool['client_io_rate'][stat] if pool['client_io_rate'].has_key(stat) else 0
+
+            op_per_sec = 0
+            for stat in ('write_op_per_sec', 'read_op_per_sec'):
+		d = pool['client_io_rate'][stat] if pool['client_io_rate'].has_key(stat) else 0
+                op_per_sec = d + op_per_sec
+		pool_data[stat] = d
+
+	    pool_data['op_per_sec'] = op_per_sec
 
         # push df results
         for pool in json_df_data['pools']:
